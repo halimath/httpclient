@@ -109,6 +109,13 @@ func (c *Client) Do(req *http.Request, opts ...RequestOption) (*http.Response, e
 	}
 	defer res.Body.Close()
 
+	for _, i := range c.resInterceptors {
+		res, err = i.InterceptResponse(res)
+		if err != nil {
+			return res, err
+		}
+	}
+
 	for _, opt := range opts {
 		if i, ok := opt.(ResponseInterceptor); ok {
 			res, err = i.InterceptResponse(res)
@@ -118,24 +125,5 @@ func (c *Client) Do(req *http.Request, opts ...RequestOption) (*http.Response, e
 		}
 	}
 
-	for _, i := range c.resInterceptors {
-		res, err = i.InterceptResponse(res)
-		if err != nil {
-			return res, err
-		}
-	}
-
 	return res, nil
 }
-
-// func (c *Client) decorateURL(u string) string {
-// 	if len(c.urlPrefix) == 0 {
-// 		return u
-// 	}
-
-// 	if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
-// 		return c.urlPrefix + u
-// 	}
-
-// 	return u
-// }
